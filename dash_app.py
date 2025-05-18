@@ -14,7 +14,7 @@ ANALYSIS_DIR = os.path.join(BASE_DIR, 'analysis')
 
 # CSV con el DataFrame
 csv_path = os.path.join(ANALYSIS_DIR, 'final_dataframe.xlsx')
-df = pd.read_csv(csv_path)
+df = pd.read_excel(csv_path)
 
 # GeoJSON de departamentos
 geojson_path = os.path.join(ANALYSIS_DIR, 'colombia_departamentos.geojson')
