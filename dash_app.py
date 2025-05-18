@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 BASE_DIR = os.path.dirname(__file__)
 
 # 1) Leer el archivo Parquet en lugar de Excel
-parquet_path = os.path.join(BASE_DIR, 'final_dataframe_2019.parquet')
+parquet_path = os.path.join(BASE_DIR, 'final_dataframe.parquet')
 df = pd.read_parquet(parquet_path, engine='pyarrow')
 
 # 2) Cargar GeoJSON desde la raíz
