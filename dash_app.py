@@ -66,30 +66,47 @@ fig_line = px.line(
 fig_line.update_xaxes(dtick=1)
 
 # 4.3 Top 5 ciudades más violentas (homicidio)
-df_hom = df_2019[df_2019['MANERA_MUERTE'] == 'Homicidio']
-top5_hom = (
-    df_hom
-    .groupby('MUNICIPIO')
-    .size()
-    .reset_index(name='Homicidios')
-    .nlargest(5, 'Homicidios')
+df_hom = df_2019[df_2019['MANERA_MUERTE'] == 'HOMICIDIO']
+top5_hom = df_hom.groupby('MUNICIPIO').size().reset_index(name='Homicidios').nlargest(5, 'Homicidios')
+fig_bar = px.bar(top5_hom, x='MUNICIPIO', y='Homicidios',
+                 title='Top 5 Ciudades Más Violentas (Homicidio)',
+                 labels={'MUNICIPIO':'Ciudad','Homicidios':'Número de Homicidios'}, template='plotly_white')
+# 4.4 Pie: Distribución total de muertes por municipio (2019)
+city_counts = df_2019.groupby('MUNICIPIO').size().reset_index(name='Muertes')
+total_global = city_counts['Muertes'].sum()
+
+fig_pie_all = px.pie(
+    city_counts,
+    names='MUNICIPIO',
+    values='Muertes',
+    title='Distribución Total de Muertes por Municipio (2019)',
+    template='plotly_white',
+    hole=.3
 )
-fig_bar = px.bar(
-    top5_hom, x='MUNICIPIO', y='Homicidios',
-    title='Top 5 Ciudades Más Violentas (Homicidio)',
-    labels={'MUNICIPIO': 'Ciudad', 'Homicidios': 'Número de Homicidios'},
-    template='plotly_white'
+fig_pie_all.update_traces(textinfo='label+percent', textposition='inside')
+
+
+# 4.4b Pie “zoom” con porcentaje global
+bottom10 = city_counts.nsmallest(10, 'Muertes').copy()
+bottom10['GlobalPct'] = bottom10['Muertes'] / total_global * 100
+
+fig_pie_bottom10 = px.pie(
+    bottom10,
+    names='MUNICIPIO',
+    values='Muertes',
+    title='Zoom: 10 Ciudades con Menor Mortalidad (porcentaje global)',
+    template='plotly_white',
+    hole=.5,
+    custom_data=['GlobalPct']
+)
+# Mostrar etiqueta + porcentaje global (una sola cifra)
+fig_pie_bottom10.update_traces(
+    textinfo='label+value',  # mostramos etiqueta y valor absoluto
+    texttemplate='%{label}: %{customdata[0]:.5f}%', 
+    hovertemplate='<b>%{label}</b><br>Muertes: %{value}<br>% Global: %{customdata[0]:.1f}%<extra></extra>'
 )
 
-# 4.4 Pie: 10 ciudades con menor mortalidad
-city_counts = df_2019.groupby('MUNICIPIO').size().reset_index(name='Muertes')
-bottom10 = city_counts.nsmallest(10, 'Muertes')
-fig_pie = px.pie(
-    bottom10, names='MUNICIPIO', values='Muertes',
-    title='10 Ciudades con Menor Mortalidad',
-    template='plotly_white', hole=.3
-)
-fig_pie.update_traces(textinfo='label+percent', textposition='inside')
+
 
 # 4.5 Tabla: Top 10 causas de muerte
 causes = (
@@ -145,7 +162,8 @@ app.layout = html.Div([
     dcc.Graph(figure=fig_map),
     dcc.Graph(figure=fig_line),
     dcc.Graph(figure=fig_bar),
-    dcc.Graph(figure=fig_pie),
+    dcc.Graph(figure=fig_pie_all),
+    dcc.Graph(figure=fig_pie_bottom10),
     dcc.Graph(figure=fig_table),
     dcc.Graph(figure=fig_hist),
     dcc.Graph(figure=fig_stack)
