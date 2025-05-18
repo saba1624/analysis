@@ -5,7 +5,7 @@ import pandas as pd
 import json
 import plotly.express as px
 import plotly.graph_objects as go
-
+import openpyxl
 # ------------------------
 # Rutas relativas (carpeta 'analysis')
 # ------------------------
