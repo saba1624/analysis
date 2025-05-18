@@ -9,15 +9,15 @@ import plotly.graph_objects as go
 # ------------------------
 # Rutas relativas (carpeta 'analysis')
 # ------------------------
+# ------------------------
 BASE_DIR     = os.path.dirname(__file__)
-ANALYSIS_DIR = os.path.join(BASE_DIR, 'analysis')
 
-# CSV con el DataFrame
-csv_path = os.path.join(ANALYSIS_DIR, 'final_dataframe.xlsx')
-df = pd.read_excel(csv_path)
+# 1) Leer el Excel en lugar de usar read_csv
+excel_path = os.path.join(BASE_DIR, 'final_dataframe.xlsx')
+df = pd.read_excel(excel_path, engine='openpyxl')
 
-# GeoJSON de departamentos
-geojson_path = os.path.join(ANALYSIS_DIR, 'colombia_departamentos.geojson')
+# 2) Cargar GeoJSON desde la raíz
+geojson_path = os.path.join(BASE_DIR, 'colombia_departamentos.geojson')
 with open(geojson_path, 'r', encoding='utf-8') as f:
     departamentos_geo = json.load(f)
 
