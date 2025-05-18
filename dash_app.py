@@ -6,6 +6,12 @@ import json
 import plotly.express as px
 import plotly.graph_objects as go
 
+
+app = dash.Dash(__name__)
+server = app.server   # ← esta línea es clave
+
+# … todo tu layout, callbacks y run_server
+
 # ------------------------
 # Rutas relativas (carpeta 'analysis')
 # ------------------------
