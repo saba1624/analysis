@@ -6,34 +6,36 @@ import json
 import plotly.express as px
 import plotly.graph_objects as go
 
-
+# ------------------------
+# 1) Crear app y exponer el servidor WSGI
+# ------------------------
 app = dash.Dash(__name__)
-server = app.server   # ← esta línea es clave
-
-# … todo tu layout, callbacks y run_server
+server = app.server
 
 # ------------------------
-# Rutas relativas (carpeta 'analysis')
+# 2) Leer datos
 # ------------------------
 BASE_DIR = os.path.dirname(__file__)
 
-# 1) Leer el archivo Parquet en lugar de Excel
+# Leer Parquet
 parquet_path = os.path.join(BASE_DIR, 'final_dataframe.parquet')
 df = pd.read_parquet(parquet_path, engine='pyarrow')
 
-# 2) Cargar GeoJSON desde la raíz
+# Cargar GeoJSON
 geojson_path = os.path.join(BASE_DIR, 'colombia_departamentos.geojson')
 with open(geojson_path, 'r', encoding='utf-8') as f:
     departamentos_geo = json.load(f)
 
 # ------------------------
-# Filtrar año 2019
+# 3) Filtrar año 2019
 # ------------------------
 df_2019 = df[df['AÑO'] == 2019]
 
 # ------------------------
-# 1. Mapa: muertes totales por Departamento (2019)
+# 4) Generar figuras
 # ------------------------
+
+# 4.1 Mapa: muertes totales por Departamento
 dept_counts = (
     df_2019
     .groupby('DEPARTAMENTO')
@@ -53,9 +55,7 @@ fig_map = px.choropleth(
 )
 fig_map.update_geos(fitbounds="locations", visible=False)
 
-# ------------------------
-# 2. Línea: muertes por mes
-# ------------------------
+# 4.2 Línea: muertes por mes
 monthly = df_2019.groupby('MES').size().reset_index(name='Muertes')
 fig_line = px.line(
     monthly, x='MES', y='Muertes',
@@ -65,9 +65,7 @@ fig_line = px.line(
 )
 fig_line.update_xaxes(dtick=1)
 
-# ------------------------
-# 3. Top 5 ciudades más violentas (homicidio)
-# ------------------------
+# 4.3 Top 5 ciudades más violentas (homicidio)
 df_hom = df_2019[df_2019['MANERA_MUERTE'] == 'Homicidio']
 top5_hom = (
     df_hom
@@ -83,11 +81,9 @@ fig_bar = px.bar(
     template='plotly_white'
 )
 
-# ------------------------
-# 4. Pie: 10 ciudades con menor mortalidad
-# ------------------------
+# 4.4 Pie: 10 ciudades con menor mortalidad
 city_counts = df_2019.groupby('MUNICIPIO').size().reset_index(name='Muertes')
-bottom10    = city_counts.nsmallest(10, 'Muertes')
+bottom10 = city_counts.nsmallest(10, 'Muertes')
 fig_pie = px.pie(
     bottom10, names='MUNICIPIO', values='Muertes',
     title='10 Ciudades con Menor Mortalidad',
@@ -95,9 +91,7 @@ fig_pie = px.pie(
 )
 fig_pie.update_traces(textinfo='label+percent', textposition='inside')
 
-# ------------------------
-# 5. Tabla: Top 10 causas de muerte
-# ------------------------
+# 4.5 Tabla: Top 10 causas de muerte
 causes = (
     df_2019
     .groupby(['COD_MUERTE', 'Descripción CIE-10'])
@@ -112,10 +106,8 @@ fig_table = go.Figure(data=[go.Table(
 )])
 fig_table.update_layout(title='Top 10 Causas de Muerte', template='plotly_white')
 
-# ------------------------
-# 6. Histograma: distrib. por edad quinquenal
-# ------------------------
-age_labels = {i: f"{(i-1)*5}-{(i-1)*5+4}" for i in range(1,18)}
+# 4.6 Histograma: distribución por edad quinquenal
+age_labels = {i: f"{(i-1)*5}-{(i-1)*5+4}" for i in range(1, 18)}
 age_labels[18] = '85+'
 age_counts = (
     df_2019
@@ -131,9 +123,7 @@ fig_hist = px.bar(
     template='plotly_white'
 )
 
-# ------------------------
-# 7. Barras apiladas: Sexo vs Departamento
-# ------------------------
+# 4.7 Barras apiladas: Sexo vs Departamento
 sex_dep = (
     df_2019
     .groupby(['DEPARTAMENTO', 'SEXO'])
@@ -148,9 +138,8 @@ fig_stack = px.bar(
 )
 
 # ------------------------
-# Montaje en Dash
+# 5) Definir layout de la app
 # ------------------------
-app = dash.Dash(__name__)
 app.layout = html.Div([
     html.H1('Dashboard Mortalidad 2019 – Colombia', style={'textAlign': 'center'}),
     dcc.Graph(figure=fig_map),
@@ -162,5 +151,8 @@ app.layout = html.Div([
     dcc.Graph(figure=fig_stack)
 ], style={'maxWidth': '1200px', 'margin': 'auto'})
 
+# ------------------------
+# 6) Ejecutar la app en local (no influye en producción con Gunicorn)
+# ------------------------
 if __name__ == '__main__':
     app.run_server(debug=True)
