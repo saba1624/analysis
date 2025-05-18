@@ -5,16 +5,15 @@ import pandas as pd
 import json
 import plotly.express as px
 import plotly.graph_objects as go
-import openpyxl
+
 # ------------------------
 # Rutas relativas (carpeta 'analysis')
 # ------------------------
-# ------------------------
-BASE_DIR     = os.path.dirname(__file__)
+BASE_DIR = os.path.dirname(__file__)
 
-# 1) Leer el Excel en lugar de usar read_csv
-excel_path = os.path.join(BASE_DIR, 'final_dataframe.xlsx')
-df = pd.read_excel(excel_path, engine='openpyxl')
+# 1) Leer el archivo Parquet en lugar de Excel
+parquet_path = os.path.join(BASE_DIR, 'final_dataframe_2019.parquet')
+df = pd.read_parquet(parquet_path, engine='pyarrow')
 
 # 2) Cargar GeoJSON desde la raíz
 geojson_path = os.path.join(BASE_DIR, 'colombia_departamentos.geojson')
@@ -103,7 +102,7 @@ causes = (
 )
 fig_table = go.Figure(data=[go.Table(
     header=dict(values=['Código CIE-10', 'Descripción CIE-10', 'Total'], fill_color='lightgrey'),
-    cells = dict(values=[causes['COD_MUERTE'], causes['Descripción CIE-10'], causes['Total']])
+    cells=dict(values=[causes['COD_MUERTE'], causes['Descripción CIE-10'], causes['Total']])
 )])
 fig_table.update_layout(title='Top 10 Causas de Muerte', template='plotly_white')
 
@@ -131,7 +130,7 @@ fig_hist = px.bar(
 # ------------------------
 sex_dep = (
     df_2019
-    .groupby(['DEPARTAMENTO','SEXO'])
+    .groupby(['DEPARTAMENTO', 'SEXO'])
     .size()
     .reset_index(name='Muertes')
 )
